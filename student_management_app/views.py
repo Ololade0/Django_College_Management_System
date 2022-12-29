@@ -1,19 +1,21 @@
 from django.contrib import messages
-from django.contrib.auth import login
-from .models import CustomUser
+from django.contrib.auth import login, logout
+from django.http import HttpResponseRedirect
+
+from .models import CustomUser, Staffs, AdminHOD, Students
 from django.shortcuts import render, redirect
 
 
 def home(request):
-    return render(request, 'home.html')
+    return render(request, 'student/home.html')
 
 
 def contact(request):
-    return render(request, 'contact.html')
+    return render(request, 'student/contact.html')
 
 
 def loginUser(request):
-    return render(request, 'login_page.html')
+    return render(request, 'student/login_page.html')
 
 
 def doLogin(request):
@@ -25,12 +27,12 @@ def doLogin(request):
     # print(request.user)
     if not (email_id and password):
         messages.error(request, "Please provide all the details!!!")
-        return render(request, 'login_page.html')
+        return render(request, 'student/login_page.html')
 
     user = CustomUser.objects.filter(email=email_id, password=password).last()
     if not user:
         messages.error(request, 'Invalid Login Credentials!!')
-        return render(request, 'login_page.html')
+        return render(request, 'student/login_page.html')
 
     login(request, user)
     print(request.user)
@@ -43,11 +45,11 @@ def doLogin(request):
     elif user.user_type == CustomUser.HOD:
         return redirect('admin_home/')
 
-    return render(request, 'home.html')
+    return render(request, 'student/home.html')
 
 
 def registration(request):
-    return render(request, 'registration.html')
+    return render(request, 'student/registration.html')
 
 
 def doRegistration(request):
@@ -64,30 +66,30 @@ def doRegistration(request):
     print(last_name)
     if not (email_id and password and confirm_password):
         messages.error(request, 'Please provide all the details!!')
-        return render(request, 'registration.html')
+        return render(request, 'student/registration.html')
 
     if password != confirm_password:
         messages.error(request, 'Both passwords should match!!')
-        return render(request, 'registration.html')
+        return render(request, 'student/registration.html')
 
     is_user_exists = CustomUser.objects.filter(email=email_id).exists()
 
     if is_user_exists:
         messages.error(request, 'User with this email id already exists. Please proceed to login!!')
-        return render(request, 'registration.html')
+        return render(request, 'student/registration.html')
 
     user_type = get_user_type_from_email(email_id)
 
     if user_type is None:
         messages.error(request,
                        "Please use valid format for the email id: '<username>.<staff|student|hod>@<college_domain>'")
-        return render(request, 'registration.html')
+        return render(request, 'student/registration.html')
 
     username = email_id.split('@')[0].split('.')[0]
 
     if CustomUser.objects.filter(username=username).exists():
         messages.error(request, 'User with this username already exists. Please use different username')
-        return render(request, 'registration.html')
+        return render(request, 'student/registration.html')
 
     user = CustomUser()
     user.username = username
@@ -104,7 +106,7 @@ def doRegistration(request):
         Students.objects.create(admin=user)
     elif user_type == CustomUser.HOD:
         AdminHOD.objects.create(admin=user)
-    return render(request, 'login_page.html')
+    return render(request, 'student/login_page.html')
 
 
 def logout_user(request):
